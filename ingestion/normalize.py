@@ -31,6 +31,18 @@ class ContentItem:
         if not self.fetched_at:
             self.fetched_at = datetime.now(timezone.utc).isoformat()
 
+    @property
+    def is_empty(self) -> bool:
+        return not self.text or not self.text.strip()
+
+    @property
+    def text_length(self) -> int:
+        return len(self.text.strip())
+
+    def __repr__(self) -> str:
+        preview = self.text[:60].replace("\n", " ")
+        return f"ContentItem({self.platform.value}/{self.external_id} by {self.author!r}: {preview!r})"
+
     def to_dict(self) -> dict:
         d = asdict(self)
         d["platform"] = self.platform.value

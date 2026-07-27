@@ -1,0 +1,26 @@
+{
+  "pythonVersion": "3.11",
+  "pythonPlatform": "Windows",
+  "venvPath": ".",
+  "venv": "venv",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false,
+  "reportUndefinedVariable": true,
+  "reportOptionalMemberAccess": false,
+  "include": [
+    "classification",
+    "config",
+    "ingestion",
+    "retrieval",
+    "drafting",
+    "escalation",
+    "approval",
+    "orchestrator",
+    "tests"
+  ],
+  "exclude": [
+    "venv",
+    "**/__pycache__"
+  ]
+}

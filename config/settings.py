@@ -6,7 +6,7 @@ are ever hard-coded. Copy .env.example to .env and fill in real values.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -18,7 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 @dataclass(frozen=True)
 class GroqConfig:
-    api_key: str = os.getenv("GROQ_API_KEY", "")
+    api_key: str = os.getenv("GROQ_API_KEY", "").strip()  # strip accidental whitespace
     base_url: str = "https://api.groq.com/openai/v1"
     # Primary model: best quality/reasoning on Groq's free tier.
     classification_model: str = os.getenv("GROQ_CLASSIFY_MODEL", "llama-3.3-70b-versatile")

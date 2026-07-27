@@ -1,7 +1,6 @@
 """
 Sends sensitive items (refund demands, legal threats, angry customers)
 straight to the team's Slack channel instead of drafting a public reply.
-No draft is generated for these — per the brief, they go to a human.
 """
 from __future__ import annotations
 
@@ -13,12 +12,24 @@ from ingestion.normalize import ContentItem
 
 logger = logging.getLogger(__name__)
 
+_CATEGORY_EMOJI = {
+    "refund_demand": "💸",
+    "legal_threat": "⚖️",
+    "angry_customer": "😡",
+    "minor_complaint": "⚠️",
+    "spam": "🚫",
+    "general_question": "❓",
+    "praise": "⭐",
+}
 
-def _format_escalation_blocks(item: ContentItem, classification: ClassificationResult) -> list[dict]:
+
+def _format_escalation_blocks(item: ContentItem, classification: ClassificationResult) -> list:
+    emoji = _CATEGORY_EMOJI.get(classification.category, "🚨")
+    text_preview = item.text[:500] + ("…" if len(item.text) > 500 else "")
     return [
         {
             "type": "header",
-            "text": {"type": "plain_text", "text": f"🚨 Escalation: {classification.category}"},
+            "text": {"type": "plain_text", "text": f"{emoji} Escalation: {classification.category}"},
         },
         {
             "type": "section",
@@ -31,7 +42,7 @@ def _format_escalation_blocks(item: ContentItem, classification: ClassificationR
         },
         {
             "type": "section",
-            "text": {"type": "mrkdwn", "text": f"*Text:*\n>{item.text}"},
+            "text": {"type": "mrkdwn", "text": f"*Text:*\n>{text_preview}"},
         },
         {
             "type": "section",
@@ -53,7 +64,10 @@ def escalate(item: ContentItem, classification: ClassificationResult) -> None:
 
     cfg = settings.slack
     if not cfg.bot_token:
-        logger.warning("Slack bot token missing — escalation not sent (logged only): %s", item.text[:80])
+        logger.warning(
+            "Slack bot token missing — escalation not sent (logged only): [%s] %s",
+            classification.category, item.text[:80],
+        )
         return
 
     client = WebClient(token=cfg.bot_token)
@@ -61,9 +75,12 @@ def escalate(item: ContentItem, classification: ClassificationResult) -> None:
         client.chat_postMessage(
             channel=cfg.escalation_channel,
             blocks=_format_escalation_blocks(item, classification),
-            text=f"Escalation: {classification.category} on {item.platform.value}",
+            text=f"Escalation: {classification.category} on {item.platform.value} by {item.author}",
         )
-        logger.info("Escalated %s item %s to %s", item.platform.value, item.external_id, cfg.escalation_channel)
+        logger.info(
+            "Escalated %s item %s to %s (category=%s)",
+            item.platform.value, item.external_id, cfg.escalation_channel, classification.category,
+        )
     except SlackApiError as e:
         logger.error("Slack escalation post failed: %s", e.response["error"])
         raise

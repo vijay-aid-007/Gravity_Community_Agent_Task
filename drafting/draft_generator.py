@@ -1,8 +1,7 @@
 """
 Generates an on-brand draft reply for non-sensitive content items.
 Retrieves relevant brand-voice guidance first (RAG), then asks the
-LLM to draft strictly within that guidance rather than free-styling
-a generic customer-service tone.
+LLM to draft strictly within that guidance.
 """
 from __future__ import annotations
 
@@ -42,7 +41,10 @@ def generate_draft(item: ContentItem, classification: ClassificationResult) -> s
 
     store = get_store()
     voice_chunks = store.retrieve(item.text, top_k=settings.retrieval.top_k)
-    voice_context = "\n\n".join(c.text for c in voice_chunks) or "(no specific guidance matched — default to warm, direct, brief tone)"
+    voice_context = (
+        "\n\n".join(c.text for c in voice_chunks)
+        or "(no specific guidance matched — default to warm, direct, brief tone)"
+    )
 
     client = Groq(api_key=settings.groq.api_key)
     user_prompt = DRAFT_USER_TEMPLATE.format(
@@ -54,14 +56,25 @@ def generate_draft(item: ContentItem, classification: ClassificationResult) -> s
         sentiment=classification.sentiment,
     )
 
-    response = client.chat.completions.create(
-        model=settings.groq.drafting_model,
-        temperature=settings.groq.temperature,
-        messages=[
-            {"role": "system", "content": DRAFT_SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
-    )
-    draft = response.choices[0].message.content.strip()
-    logger.info("Drafted reply for %s item %s", item.platform.value, item.external_id)
-    return draft
+    last_error: Exception | None = None
+    for attempt in range(settings.groq.max_retries):
+        try:
+            response = client.chat.completions.create(
+                model=settings.groq.drafting_model,
+                temperature=settings.groq.temperature,
+                messages=[
+                    {"role": "system", "content": DRAFT_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ],
+            )
+            draft = (response.choices[0].message.content or "").strip()
+            if not draft:
+                raise ValueError("LLM returned empty draft.")
+            logger.info("Drafted reply for %s item %s", item.platform.value, item.external_id)
+            logger.debug("Draft content: %s", draft)
+            return draft
+        except Exception as e:
+            last_error = e
+            logger.warning("Draft attempt %d failed: %s", attempt + 1, e)
+
+    raise RuntimeError(f"Draft generation failed after {settings.groq.max_retries} attempts: {last_error}")
