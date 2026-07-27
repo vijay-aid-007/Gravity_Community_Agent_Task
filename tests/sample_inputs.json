@@ -1,0 +1,66 @@
+[
+  {
+    "platform": "reddit",
+    "external_id": "r1",
+    "author": "curious_user_42",
+    "text": "Does the Pro plan let you export data as CSV, or only PDF?",
+    "url": "https://reddit.com/r/YourBrandSubreddit/comments/r1",
+    "created_at": "2026-07-24T10:00:00Z"
+  },
+  {
+    "platform": "reddit",
+    "external_id": "r2",
+    "author": "angry_ravi",
+    "text": "This is unacceptable, I want a full refund right now or I'm contacting my bank to dispute the charge.",
+    "url": "https://reddit.com/r/YourBrandSubreddit/comments/r2",
+    "created_at": "2026-07-24T10:05:00Z"
+  },
+  {
+    "platform": "youtube",
+    "external_id": "y1",
+    "author": "TechReviewerPriya",
+    "text": "Been using this for 3 months now, genuinely one of the best tools I've tried this year!",
+    "url": "https://www.youtube.com/watch?v=abc123&lc=y1",
+    "created_at": "2026-07-24T09:00:00Z"
+  },
+  {
+    "platform": "youtube",
+    "external_id": "y2",
+    "author": "frustrated_dev99",
+    "text": "My lawyer is going to hear about this. This is basically fraud and I'm reporting you to consumer court.",
+    "url": "https://www.youtube.com/watch?v=abc123&lc=y2",
+    "created_at": "2026-07-24T09:10:00Z"
+  },
+  {
+    "platform": "youtube",
+    "external_id": "y3",
+    "author": "spammerbot_2000",
+    "text": "Check out my channel for FREE crypto giveaways!!! link in bio!!!",
+    "url": "https://www.youtube.com/watch?v=abc123&lc=y3",
+    "created_at": "2026-07-24T09:15:00Z"
+  },
+  {
+    "platform": "x",
+    "external_id": "x1",
+    "author": "startup_sam",
+    "text": "@YourBrandHandle the mobile app UI is a bit confusing on the settings page, took me a while to find dark mode",
+    "url": "https://x.com/i/web/status/x1",
+    "created_at": "2026-07-24T08:00:00Z"
+  },
+  {
+    "platform": "x",
+    "external_id": "x2",
+    "author": "furious_customer_88",
+    "text": "@YourBrandHandle absolutely disgusted with your support team, they hung up on me twice. Never using this garbage again.",
+    "url": "https://x.com/i/web/status/x2",
+    "created_at": "2026-07-24T08:10:00Z"
+  },
+  {
+    "platform": "x",
+    "external_id": "x3",
+    "author": "happy_hana",
+    "text": "@YourBrandHandle just want to say thank you, your support team fixed my issue in 10 minutes today!",
+    "url": "https://x.com/i/web/status/x3",
+    "created_at": "2026-07-24T08:20:00Z"
+  }
+]
