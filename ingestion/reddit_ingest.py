@@ -1,14 +1,29 @@
 """
-Reddit ingestion using PRAW (official-style Reddit API wrapper).
-Pulls the newest comments/mentions from a configured subreddit.
+Reddit ingestion.
 
-In the Activepieces build, this maps 1:1 to the native Reddit piece's
-"New Comment" trigger — this module exists so the exact filtering and
-normalization logic can be tested locally before wiring it into a
-no-code trigger.
+Design decision: Reddit's "Responsible Builder Policy" (introduced late 2025)
+closed self-service OAuth registration — new API access now requires manual
+approval through Reddit's ticket form, with reported wait times ranging from
+days to indefinite silence, and small non-commercial projects frequently
+rejected outright. Waiting on that approval is incompatible with this
+assessment's timeline.
+
+Like X, this module supports two modes:
+
+  - "mock" (default): reads simulated comments from tests/sample_inputs.json,
+    so the full classify -> escalate/draft -> approve flow can be built,
+    tested, and demoed end-to-end without an approved Reddit app.
+  - "live": uses PRAW once an approved client_id/client_secret pair is
+    available. Swapping modes is a one-line config change (REDDIT_MODE=live
+    in .env) with no changes needed anywhere else in the pipeline, since
+    both paths return ContentItem.
+
+In the Activepieces build, live mode maps 1:1 to the native Reddit piece's
+"New Comment" trigger once Reddit approves the app.
 """
 from __future__ import annotations
 
+import json
 import logging
 from typing import List
 
@@ -18,14 +33,29 @@ from ingestion.normalize import ContentItem, Platform
 logger = logging.getLogger(__name__)
 
 
-def fetch_recent_mentions() -> List[ContentItem]:
-    """Fetch the most recent comments from the configured subreddit."""
+def _fetch_mock() -> List[ContentItem]:
+    path = settings.reddit.mock_data_path
+    if not path.exists():
+        logger.warning("Mock Reddit data file not found at %s", path)
+        return []
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    items = [
+        ContentItem.from_dict(entry)
+        for entry in data
+        if entry.get("platform") == Platform.REDDIT.value
+    ]
+    logger.info("Loaded %d mock Reddit comments", len(items))
+    return items
+
+
+def _fetch_live() -> List[ContentItem]:
     try:
         import praw
     except ImportError as e:
-        raise RuntimeError(
-            "praw is not installed. Run: pip install praw"
-        ) from e
+        raise RuntimeError("praw is not installed. Run: pip install praw") from e
 
     cfg = settings.reddit
     if not cfg.client_id or not cfg.client_secret:
@@ -51,5 +81,11 @@ def fetch_recent_mentions() -> List[ContentItem]:
                 created_at=str(comment.created_utc),
             )
         )
-    logger.info("Fetched %d Reddit comments", len(items))
+    logger.info("Fetched %d live Reddit comments", len(items))
     return items
+
+
+def fetch_recent_mentions() -> List[ContentItem]:
+    if settings.reddit.mode == "live":
+        return _fetch_live()
+    return _fetch_mock()

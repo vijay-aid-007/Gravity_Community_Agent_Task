@@ -31,11 +31,18 @@ class GroqConfig:
 
 @dataclass(frozen=True)
 class RedditConfig:
+    """
+    Reddit's Responsible Builder Policy gates new API access behind manual
+    approval (days-to-indefinite wait, frequent rejection for small projects).
+    Defaults to MOCK mode for the same reason as X — see x_ingest.py.
+    """
+    mode: str = os.getenv("REDDIT_MODE", "mock")  # "mock" | "live"
     client_id: str = os.getenv("REDDIT_CLIENT_ID", "")
     client_secret: str = os.getenv("REDDIT_CLIENT_SECRET", "")
     user_agent: str = os.getenv("REDDIT_USER_AGENT", "gravity-community-agent/0.1")
     subreddit: str = os.getenv("REDDIT_SUBREDDIT", "YourBrandSubreddit")
     poll_limit: int = int(os.getenv("REDDIT_POLL_LIMIT", "25"))
+    mock_data_path: Path = BASE_DIR / "tests" / "sample_inputs.json"
 
 
 @dataclass(frozen=True)
